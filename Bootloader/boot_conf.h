@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * File Name          : ui.h
-  * Description        : This file contains user interface definitions
+  * File Name          : boot_conf.h
+  * Description        : This file contains firmware configuration
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2016 Roman Stepanov
+  * COPYRIGHT(c) 2017 Roman Stepanov
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -31,114 +31,46 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __UI_H
-#define __UI_H
+#ifndef __BOOT_CONF_H
+#define __BOOT_CONF_H
 
 #include "stm32f1xx_hal.h"
-#include "cmsis_os.h"
-#include "ffconf.h"
+#include "fatfs.h"
 
-#define FL_FONT_SIZE	16
-#define FLIST_SIZE		((240 - 20) / FL_FONT_SIZE)
+#if defined(STM32F107xC) && defined(MKS_TFT)
+/**
+ * Makerbase MKS-TFT32
+ */
+ #define SPEAKER_Pin             GPIO_PIN_2
+ #define SPEAKER_GPIO_Port       GPIOA
+ #define SDCARD_nCS_Pin          GPIO_PIN_11
+ #define SDCARD_nCS_GPIO_Port    GPIOD
+ #define FLASH_nCS_Pin           GPIO_PIN_9
+ #define FLASH_nCS_GPIO_Port     GPIOB
 
-#if _USE_LFN != 0
-# define NAMELEN	(_MAX_LFN + 1 + 1)
-#else
-# define NAMELEN	13
+extern FATFS sdFileSystem;		// 0:/
+
+#elif defined(STM32F103xE) && defined(CZMINI)
+
 #endif
 
-typedef struct
+typedef enum
 {
-    enum {
-    	INIT_EVENT = 0,
-		UPDATE1_EVENT,
-		UPDATE2_EVENT,
-		UPDATE3_EVENT,
-		UPDATE4_EVENT,
-		UPDATE5_EVENT,
-		UPDATE6_EVENT,
-		UPDATE7_EVENT,
-		UPDATE8_EVENT,
-		UPDATE12_EVENT,
-		UPDATE14_EVENT,
-    	TOUCH_DOWN_EVENT,
-		TOUCH_UP_EVENT,
-		SDCARD_INSERT,
-		SDCARD_REMOVE,
-		USBDRIVE_INSERT,
-		USBDRIVE_REMOVE
-    } ucEventID;
-    union {
-    	unsigned int touchXY;
-    } ucData;
-} xEvent_t;
+	FLASH_RESULT_OK = 0,
+	FLASH_RESULT_FILE_ERROR,
+	FLASH_RESULT_FLASH_ERROR,
+	FLASH_FILE_NOT_EXISTS,
+	FLASH_FILE_CANNOT_OPEN,
+	FLASH_FILE_INVALID_HASH,
+	FLASH_FILE_TOO_BIG
+} FlashResult;
 
-extern QueueHandle_t xUIEventQueue;
+FlashResult flash(const char *fname);
+extern const uint32_t *mcuFirstPageAddr;
 
-typedef void (*volatile eventProcessor_t) (xEvent_t *);
-extern eventProcessor_t processEvent;
+typedef void (*Callable)();
 
-typedef enum {
-	MOVE_01 = 0,
-	MOVE_1,
-	MOVE_5,
-	MOVE_10
-} xMoveStep_t;
-extern uint8_t moveStep;
+#define MAIN_PR_OFFSET 0x8000
 
-typedef enum {
-	MANUAL_OFF = 0,
-	AUTO_OFF
-} xOffMode_t;
-extern uint8_t offMode;
-
-typedef enum {
-	CONNECT_9600 = 0,
-	CONNECT_57600,
-	CONNECT_115200,
-	CONNECT_250000
-} xConnectSpeed_t;
-extern uint8_t connectSpeed;
-
-typedef enum {
-	PR_EXTRUDER_1 = 0,
-	PR_EXTRUDER_2,
-	PR_HEATBED
-} xPreheatDev_t;
-extern uint8_t preheatDev;
-
-typedef enum {
-    STEP_1_DEGREE = 0,
-    STEP_5_DEGREE,
-    STEP_10_DEGREE
-} xStepDegree_t;
-extern uint8_t preheatSelDegree;
-
-typedef enum {
-	EXTRUDER_1 = 0,
-	EXTRUDER_2
-} xExtrudeDev_t;
-extern uint8_t extrudeDev;
-
-typedef enum {
-	DISTANCE_1 = 0,
-	DISTANCE_5,
-	DISTANCE_10
-} xExtrudeDistance_t;
-extern uint8_t extrudeDistance;
-
-typedef enum {
-    SPEED_SLOW = 0,
-    SPEED_NORMAL,
-    SPEED_HIGH
-} xExtrudeSpeed_t;
-extern uint8_t extrudeSelSpeed;
-
-typedef enum {
-    FS_SD = 0,
-    FS_USB
-} xFSSelection_t;
-extern uint8_t selectedFs;
-
-#endif /* __UI_H */
+#endif /* __BOOT_CONF_H */
 /************************ (C) COPYRIGHT Roman Stepanov *****END OF FILE****/

@@ -2,7 +2,7 @@
  ******************************************************************************
   * @file            : USB_HOST
   * @version         : v1.0_Cube
-  * @brief           :  This file implements the USB Host 
+  * @brief           :  This file implements the USB Host
   ******************************************************************************
   * COPYRIGHT(c) 2016 STMicroelectronics
   *
@@ -37,31 +37,31 @@
 #include "usbh_core.h"
 #include "usbh_msc.h"
 
-#include "ui.h"
+#include "mks_conf.h"
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostFS;
 
 /**
 * -- Insert your variables declaration here --
-*/ 
+*/
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
 /*
 * user callback declaration
-*/ 
+*/
 static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
 
 /**
 * -- Insert your external function declaration here --
-*/ 
+*/
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
 
-/* init function */				        
+/* init function */
 void MX_USB_HOST_Init(void)
 {
   /* Init Host Library,Add Supported Class and Start the library*/
@@ -72,21 +72,17 @@ void MX_USB_HOST_Init(void)
 
 /*
  * user callback definition
-*/ 
+*/
 static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 {
     /* USER CODE BEGIN 2 */
-	xEvent_t event;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 	switch (id) {
 	case HOST_USER_DISCONNECTION:
-		event.ucEventID = USBDRIVE_REMOVE;
-		xQueueSendToBack(xUIEventQueue, &event, 1000);
-		break;
-
 	case HOST_USER_CLASS_ACTIVE:
-		event.ucEventID = USBDRIVE_INSERT;
-		xQueueSendToBack(xUIEventQueue, &event, 1000);
+	    usbEvent = id;
+		xSemaphoreGiveFromISR(xUSBSemaphore, &xHigherPriorityTaskWoken);
 		break;
 
 	case HOST_USER_CONNECTION:
